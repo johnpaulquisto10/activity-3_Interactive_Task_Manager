@@ -134,4 +134,148 @@
     renderTasks();
   </script>
 </body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interactive Task Manager</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="App">
+    <header class="taskHeader">
+      <h1>Interactive Task Manager</h1>
+    </header>
+
+    <main>
+      <div class="taskForm">
+        <input type="text" id="taskName" class="taskNameInput" placeholder="New task...">
+        <select id="taskPriority" class="taskPrioritySelect">
+          <option value="Top">High Priority</option>
+          <option value="Middle">Medium Priority</option>
+          <option value="Low">Low Priority</option>
+        </select>
+        <button id="addTaskBtn" class="addTaskButton">Add Task</button>
+        <input type="text" id="searchInput" class="searchInput" placeholder="Search tasks...">
+        <button id="clearBtn" class="deleteTaskButton">Clear</button>
+      </div>
+
+      <div class="board">
+        <div class="column">
+          <h2 class="heading">To Do</h2>
+          <div id="todo" class="taskColumn" ondragover="allowDrop(event)" ondrop="drop(event, 'To Do')"></div>
+        </div>
+        <div class="column">
+          <h2 class="heading inprogress">In Progress</h2>
+          <div id="inprogress" class="taskColumn" ondragover="allowDrop(event)" ondrop="drop(event, 'In Progress')"></div>
+        </div>
+        <div class="column">
+          <h2 class="heading done">Done</h2>
+          <div id="done" class="taskColumn" ondragover="allowDrop(event)" ondrop="drop(event, 'Done')"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    let tasks = [];
+
+    const taskNameInput = document.getElementById("taskName");
+    const taskPriorityInput = document.getElementById("taskPriority");
+    const addTaskBtn = document.getElementById("addTaskBtn");
+    const searchInput = document.getElementById("searchInput");
+    const clearBtn = document.getElementById("clearBtn");
+
+    const todoColumn = document.getElementById("todo");
+    const inprogressColumn = document.getElementById("inprogress");
+    const doneColumn = document.getElementById("done");
+
+    function renderTasks() {
+      todoColumn.innerHTML = "";
+      inprogressColumn.innerHTML = "";
+      doneColumn.innerHTML = "";
+
+      const keyword = searchInput.value.toLowerCase();
+
+      tasks
+        .filter(t => t.task.toLowerCase().includes(keyword))
+        .forEach(t => {
+          const div = document.createElement("div");
+          div.className = "taskCard";
+          div.draggable = true;
+          div.ondragstart = (e) => drag(e, t.id);
+
+          div.innerHTML = `
+            <span class="priority ${t.priority.toLowerCase()}"></span>
+            ${t.task}
+            <div class="actions">
+              <button onclick="deleteTask(${t.id})">Delete</button>
+            </div>
+          `;
+
+          if (t.status === "To Do") todoColumn.appendChild(div);
+          else if (t.status === "In Progress") inprogressColumn.appendChild(div);
+          else if (t.status === "Done") doneColumn.appendChild(div);
+        });
+    }
+
+    function addTask() {
+      const name = taskNameInput.value.trim();
+      const priority = taskPriorityInput.value;
+
+      if (!name) {
+        alert("Please enter a task.");
+        return;
+      }
+
+      const newTask = {
+        id: Date.now(),
+        task: name,
+        priority,
+        status: "To Do"
+      };
+
+      tasks.push(newTask);
+      taskNameInput.value = "";
+      taskPriorityInput.value = "Top";
+      renderTasks();
+    }
+
+    function deleteTask(id) {
+      tasks = tasks.filter(t => t.id !== id);
+      renderTasks();
+    }
+
+    
+    function drag(event, id) {
+      event.dataTransfer.setData("taskId", id);
+    }
+
+    function allowDrop(event) {
+      event.preventDefault();
+    }
+
+    function drop(event, newStatus) {
+      event.preventDefault();
+      const id = event.dataTransfer.getData("taskId");
+      const task = tasks.find(t => t.id == id);
+      if (task) {
+        task.status = newStatus;
+        renderTasks();
+      }
+    }
+
+    addTaskBtn.addEventListener("click", addTask);
+    searchInput.addEventListener("input", renderTasks);
+    clearBtn.addEventListener("click", () => {
+      searchInput.value = "";
+      renderTasks();
+    });
+
+    renderTasks();
+  </script>
+</body>
 </html>
+
+
